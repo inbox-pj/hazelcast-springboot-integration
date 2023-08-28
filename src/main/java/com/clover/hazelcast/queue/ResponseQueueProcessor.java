@@ -4,6 +4,8 @@ import com.clover.hazelcast.model.HazelcastResponse;
 import com.clover.hazelcast.utils.JsonUtils;
 import com.hazelcast.core.HazelcastInstance;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +15,8 @@ import java.io.IOException;
 @Slf4j
 public class ResponseQueueProcessor extends HazelcastQueueProcessor<String> {
 
-    public ResponseQueueProcessor(HazelcastInstance hazelcastInstance, HazelcastQueueService queueService,
+    @Autowired
+    public ResponseQueueProcessor(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance, HazelcastQueueService queueService,
                                   @Value("${hazelcast.response.queue.processor.threads}") int threadCount) {
         super(hazelcastInstance, queueService.getResponseQueueName(), threadCount);
     }

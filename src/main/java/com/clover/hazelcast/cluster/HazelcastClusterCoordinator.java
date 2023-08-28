@@ -17,7 +17,7 @@ public class HazelcastClusterCoordinator {
     private final int clusterSize;
 
     @Autowired
-    public HazelcastClusterCoordinator(HazelcastInstance hazelcastInstance,
+    public HazelcastClusterCoordinator(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance,
                                        @Value("${hazelcast.cluster.size}") int clusterSize) {
         this.hazelcastInstance = hazelcastInstance;
         this.clusterSize = clusterSize;

@@ -2,9 +2,12 @@ package com.clover.hazelcast.queue;
 
 import com.clover.hazelcast.model.HazelcastRequest;
 import com.clover.hazelcast.model.HazelcastResponse;
+import com.clover.hazelcast.repository.MerchantHsnRepository;
 import com.clover.hazelcast.utils.JsonUtils;
 import com.hazelcast.core.HazelcastInstance;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,14 +17,19 @@ import java.io.IOException;
 @Slf4j
 public class RequestQueueProcessor extends HazelcastQueueProcessor<String> {
 
+    @Autowired
     private HazelcastQueueService queueService;
-
+    @Qualifier("hazelcastInstance")
+    @Autowired
     HazelcastInstance hazelcastInstance;
+    @Autowired
+    MerchantHsnRepository repository;
 
     @Value("${hazelcast.data.map.name}")
     String mapName;
 
-    public RequestQueueProcessor(HazelcastInstance hazelcastInstance, HazelcastQueueService queueService, @Value("${hazelcast.request.queue.processor.threads}") int threadCount) {
+    @Autowired
+    public RequestQueueProcessor(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance, HazelcastQueueService queueService, @Value("${hazelcast.request.queue.processor.threads}") int threadCount) {
         super(hazelcastInstance, queueService.getRequestQueueName(), threadCount);
         this.queueService = queueService;
     }
@@ -42,8 +50,10 @@ public class RequestQueueProcessor extends HazelcastQueueProcessor<String> {
     private void doResponse(HazelcastRequest request) {
         HazelcastResponse response = new HazelcastResponse(request.getRequestProperties().get(HazelcastRequest.RequestProperty.CORRELATION_ID.name()));
         response.setHsn(request.getHsn());
+        response.setMerchantId(repository.findMerchantHsnByHsn(response.getHsn()).getMerchantId());
+
         if(hazelcastInstance.getMap(mapName).containsKey(request.getHsn())) {
-            response.setMerchantId((String) hazelcastInstance.getMap(mapName).get(request.getHsn()));
+            response.setUniqueDisplayId((String) hazelcastInstance.getMap(mapName).get(request.getHsn()));
         }
 
         if(queueService.addMessageToResponseQueue(queueService.getResponseQueueName(), response)) {

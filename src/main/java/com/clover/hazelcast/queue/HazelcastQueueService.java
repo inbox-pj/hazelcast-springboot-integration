@@ -97,7 +97,10 @@ public class HazelcastQueueService implements QueueService<HazelcastRequest, Haz
             try {
                 message.getRequestProperties().put(HazelcastRequest.RequestProperty.QUEUE_SEND_TIME.name(), String.valueOf(System.currentTimeMillis()));
                 log.info("sending request to queue {}:\n{}", queueName, message);
-                return hazelcastInstance.getQueue(queueName).offer(JsonUtils.marshal(message), 5, TimeUnit.SECONDS);
+                boolean isMessageSent =  hazelcastInstance.getQueue(queueName).offer(JsonUtils.marshal(message), 60
+                        , TimeUnit.SECONDS);
+                log.info("Request sent -> "+ isMessageSent);
+                return isMessageSent;
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }

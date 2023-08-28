@@ -15,6 +15,7 @@ import java.util.Map;
 public class HazelcastResponse {
     private String hsn;
     private String merchantId;
+    private String uniqueDisplayId;
 
     private Map<String, String> responseProperties;
 

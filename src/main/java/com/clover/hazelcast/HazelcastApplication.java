@@ -3,9 +3,12 @@ package com.clover.hazelcast;
 import com.clover.hazelcast.cluster.ClusterMembershipListener;
 import com.clover.hazelcast.queue.HazelcastQueueService;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.EvictionPolicy;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.ManagementCenterConfig;
 import com.hazelcast.config.MapConfig;
+import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.config.MemberAttributeConfig;
 import com.hazelcast.config.MulticastConfig;
 import com.hazelcast.config.NetworkConfig;
@@ -17,12 +20,14 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Properties;
 
 @SpringBootApplication
 @Slf4j
+@EnableCaching
 public class HazelcastApplication {
 
 	public static void main(String[] args) {
@@ -94,6 +99,12 @@ public class HazelcastApplication {
 		responseQueueConfig.setName(HazelcastQueueService.getResponseQueueName(instanceId));
 		responseQueueConfig.setMaxSize(responseQueueMaxSize);
 
+		MapConfig cacheConfig = new MapConfig();
+		cacheConfig.setName("hazelcast-cache")
+				.setTimeToLiveSeconds(5000)
+				.setMaxSizeConfig(new MaxSizeConfig(200,com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.FREE_HEAP_SIZE))
+				.setEvictionPolicy(EvictionPolicy.LRU);
+
 		Config cfg = new Config();
 		cfg.setGroupConfig(groupConfig);
 		cfg.setProperties(hazelcastProperties);
@@ -106,6 +117,9 @@ public class HazelcastApplication {
 		// queue
 		cfg.addQueueConfig(requestQueueConfig);
 		cfg.addQueueConfig(responseQueueConfig);
+
+		// cache config
+		cfg.addMapConfig(cacheConfig);
 
 		HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(cfg);
 		hazelcastInstance.getCluster().addMembershipListener(

@@ -3,6 +3,7 @@ package com.clover.hazelcast.queue;
 import com.hazelcast.core.HazelcastInstance;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PreDestroy;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,6 +39,12 @@ public abstract class HazelcastQueueProcessor<T> {
                 log.error(t.getMessage(), t);
             }
         };
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("stopping hz queue polling tasks on {} queue", queueName);
+        executor.shutdown();
     }
 
     protected abstract void onMessage(T message);
